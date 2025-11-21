@@ -10,8 +10,7 @@ function About() {
         <p className="text-gray-600 dark:text-gray-300 text-center max-w-3xl mx-auto mb-12">
           <b>ByBook</b> adalah platform toko buku online yang menyediakan berbagai koleksi
           buku dari berbagai genre dan penulis terkenal. Kami berkomitmen untuk
-          memberikan pengalaman membaca yang mudah, menyenangkan, dan terjangkau
-          untuk semua kalangan pembaca.
+          membe produk pertanian yang kami bu 
         </p>
 
         <div className="grid md:grid-cols-3 gap-8 mt-8">

@@ -5,47 +5,32 @@ const ProductPage = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetchProducts();
+    api.get("/products")
+      .then(res => setProducts(res.data))
+      .catch(err => console.error(err));
   }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const res = await api.get("/products");
-      setProducts(res.data.data || []);
-    } catch (error) {
-      console.error("Gagal mengambil data produk:", error);
-    }
-  };
 
   return (
     <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Data Produk</h1>
-      <table className="min-w-full border text-sm">
+      <h1 className="text-xl font-bold mb-4">Manajemen Stok Produk</h1>
+      <table className="w-full border">
         <thead className="bg-gray-100">
           <tr>
-            <th className="border px-4 py-2">No</th>
-            <th className="border px-4 py-2">Nama Produk</th>
-            <th className="border px-4 py-2">Harga</th>
-            <th className="border px-4 py-2">Stok</th>
+            <th>No</th>
+            <th>Nama Produk</th>
+            <th>Harga</th>
+            <th>Deskripsi</th>
           </tr>
         </thead>
         <tbody>
-          {products.length > 0 ? (
-            products.map((prod, i) => (
-              <tr key={prod.id}>
-                <td className="border px-4 py-2">{i + 1}</td>
-                <td className="border px-4 py-2">{prod.name}</td>
-                <td className="border px-4 py-2">Rp {prod.price}</td>
-                <td className="border px-4 py-2">{prod.stock}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="4" className="text-center py-4">
-                Tidak ada data
-              </td>
+          {products.map((p, i) => (
+            <tr key={p.id} className="text-center border-b">
+              <td>{i + 1}</td>
+              <td>{p.name}</td>
+              <td>Rp {p.price}</td>
+              <td>{p.description}</td>
             </tr>
-          )}
+          ))}
         </tbody>
       </table>
     </div>
@@ -53,6 +38,7 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+
 
 
 
