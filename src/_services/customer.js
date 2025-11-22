@@ -1,17 +1,16 @@
 import api from "../_api";
 
 // 📦 Get all products
-export const getProducts = async () => {
+export const getCustomers = async () => {
   const token = localStorage.getItem("accessToken");
 
-  // ⛔ Kalau belum login, jangan panggil API
   if (!token) {
     console.warn("⚠️ User not logged in — product API skipped.");
     return []; 
   }
 
   try {
-    const { data } = await api.get("/products", {
+    const { data } = await api.get("/sales", {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -24,10 +23,8 @@ export const getProducts = async () => {
   }
 };
 
-
-
-export const createProduct = async (formData) => {
-  const { data } = await api.post("/products", formData, {
+export const createCustomer = async (formData) => {
+  const { data } = await api.post("/sales", formData, {
     headers: {
       "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
       "Content-Type": "application/json"
@@ -37,8 +34,8 @@ export const createProduct = async (formData) => {
   return data.data;
 };
 
-export const updateProduct = async (id, formData) => {
-  const { data } = await api.post(`/products/${id}`, formData, {
+export const updateCustomer = async (id, formData) => {
+  const { data } = await api.post(`/sales/${id}`, formData, {
     headers: {
       "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
       "Content-Type": "application/json"
@@ -48,8 +45,8 @@ export const updateProduct = async (id, formData) => {
   return data.data;
 };
 
-export const deleteProduct = async (id) => {
-  const { data } = await api.delete(`/products/${id}`, {
+export const deleteCustomer = async (id) => {
+  const { data } = await api.delete(`/sales/${id}`, {
     headers: {
       "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
     }
@@ -57,6 +54,3 @@ export const deleteProduct = async (id) => {
 
   return data.data;
 };
-
-
-

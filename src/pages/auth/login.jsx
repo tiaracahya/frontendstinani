@@ -12,7 +12,7 @@ function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
 
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("Token");
   const decodedData = useDecodeToken(token);
 
   const handleChange = (e) => {
@@ -33,7 +33,7 @@ function Login() {
 
       console.log("Response dari server:", response.data);
 
-      localStorage.setItem("accessToken", response.data.token);
+      localStorage.setItem("Token", response.data.token);
       localStorage.setItem("userInfo", JSON.stringify(response.data.user));
 
       const role = response.data.user.role;

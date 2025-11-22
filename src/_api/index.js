@@ -7,8 +7,10 @@ export const API = axios.create({
   },
 });
 
+
+// kirim token otomatis
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("Token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

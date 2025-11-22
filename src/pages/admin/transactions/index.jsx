@@ -1,119 +1,57 @@
-import React, { useEffect, useState } from "react";
-import api from "../../../_api";
+import React, { useState } from "react";
 
-const TransactionPage = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [sales, setSales] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [form, setForm] = useState({
-    sales_id: "",
-    product_id: "",
-    quantity: 1,
-    total_price: 0,
+function Transaction() {
+  const [transaction, setTransaction] = useState({
     date: "",
+    quantity: "",
+    price: "",
+    total: 0,
   });
 
-  const fetchData = async () => {
-    const [tx, s, p] = await Promise.all([
-      api.get("/transactions"),
-      api.get("/sales"),
-      api.get("/products"),
-    ]);
-    setTransactions(tx.data);
-    setSales(s.data);
-    setProducts(p.data);
+  const handleChange = (e) => {
+    const updated = { ...transaction, [e.target.name]: e.target.value };
+    updated.total = (updated.quantity || 0) * (updated.price || 0);
+    setTransaction(updated);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const selected = products.find((p) => p.id === parseInt(form.product_id));
-    const total = form.quantity * selected.price;
-
-    await api.post("/transactions", { ...form, total_price: total });
-    setForm({ sales_id: "", product_id: "", quantity: 1, total_price: 0, date: "" });
-    fetchData();
+    alert("Saved Transaction! (Integrate backend soon)");
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Transaksi Penjualan</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-green-100 flex justify-center py-12 px-4">
+      <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg border border-blue-100">
+        <h1 className="text-3xl font-bold text-blue-900 mb-6 text-center">
+          Add Transaction
+        </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-wrap gap-2 mb-4">
-        <select
-          value={form.sales_id}
-          onChange={(e) => setForm({ ...form, sales_id: e.target.value })}
-          className="border p-2 rounded w-1/5"
-        >
-          <option value="">Pilih Pembeli</option>
-          {sales.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <input name="date" type="date" className="input-field"
+            value={transaction.date} onChange={handleChange} />
 
-        <select
-          value={form.product_id}
-          onChange={(e) => setForm({ ...form, product_id: e.target.value })}
-          className="border p-2 rounded w-1/5"
-        >
-          <option value="">Pilih Produk</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
+          <input name="quantity" className="input-field"
+            placeholder="Quantity" value={transaction.quantity} 
+            onChange={handleChange} />
 
-        <input
-          type="number"
-          min="1"
-          placeholder="Jumlah"
-          value={form.quantity}
-          onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-          className="border p-2 rounded w-1/5"
-        />
+          <input name="price" className="input-field"
+            placeholder="Price" value={transaction.price}
+            onChange={handleChange} />
 
-        <input
-          type="date"
-          value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })}
-          className="border p-2 rounded w-1/5"
-        />
+          <div className="p-3 font-semibold rounded-xl bg-green-50 border text-blue-700">
+            Total: Rp. {transaction.total || 0}
+          </div>
 
-        <button className="bg-green-600 text-white px-4 py-2 rounded">
-          Tambah Transaksi
-        </button>
-      </form>
-
-      <table className="w-full border">
-        <thead className="bg-gray-100">
-          <tr>
-            <th>No</th>
-            <th>Tanggal</th>
-            <th>Pembeli</th>
-            <th>Produk</th>
-            <th>Qty</th>
-            <th>Total Harga</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((t, i) => (
-            <tr key={t.id} className="text-center border-b">
-              <td>{i + 1}</td>
-              <td>{t.date}</td>
-              <td>{t.sales_name}</td>
-              <td>{t.product_name}</td>
-              <td>{t.quantity}</td>
-              <td>Rp {t.total_price}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          <button className="btn-primary w-full">Save Transaction</button>
+        </form>
+      </div>
     </div>
   );
-};
+}
 
-export default TransactionPage;
+export default Transaction;
+
+
+
 
 
