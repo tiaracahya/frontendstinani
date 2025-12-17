@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  getCustomers,
+  getCustomer,
   createCustomer,
   updateCustomer,
   deleteCustomer,
@@ -9,28 +9,26 @@ import {
 function Customer() {
   const [customers, setCustomers] = useState([]);
   const [formData, setFormData] = useState({
-    nama: "",
-    phone: "",
+    name: "",
+    phone_number: "",
   });
-
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // ==========================
-  // FETCH CUSTOMER / SALES
+  // FETCH CUSTOMER
   // ==========================
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem("accessToken");
-
       if (!token) {
         console.log("🔒 User belum login — skip fetch customers");
-        return; 
+        return;
       }
 
       try {
         setLoading(true);
-        const data = await getCustomers();
+        const data = await getCustomer();
         setCustomers(data);
       } catch (err) {
         console.error("❌ Failed to fetch customers:", err);
@@ -57,23 +55,14 @@ function Customer() {
 
     try {
       if (editId) {
-        // UPDATE DATA
-        await updateCustomer(editId, formData);
-
-        setCustomers(
-          customers.map((c) =>
-            c.id === editId ? { ...c, ...formData } : c
-          )
-        );
-
+        const updated = await updateCustomer(editId, formData);
+        setCustomers(customers.map(c => c.id === editId ? updated.data : c));
         setEditId(null);
       } else {
-        // CREATE DATA
         const newCustomer = await createCustomer(formData);
-        setCustomers([...customers, newCustomer]);
+        setCustomers([...customers, newCustomer.data]);
       }
-
-      setFormData({ nama: "", phone: "" });
+      setFormData({ name: "", phone_number: "" });
     } catch (error) {
       console.error("❌ Failed to save customer:", error);
     }
@@ -99,13 +88,11 @@ function Customer() {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center py-10 px-4">
       <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-8">
-
         <h1 className="text-3xl font-bold text-center mb-10 text-blue-700">
           Sales Management
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-
           {/* FORM */}
           <form
             onSubmit={handleSubmit}
@@ -119,8 +106,8 @@ function Customer() {
               <label className="text-gray-700 font-medium">Nama</label>
               <input
                 type="text"
-                name="nama"
-                value={formData.nama}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
                 placeholder="Enter name"
                 className="p-3 border rounded-xl focus:ring focus:ring-blue-300 outline-none"
@@ -132,8 +119,8 @@ function Customer() {
               <label className="text-gray-700 font-medium">Phone</label>
               <input
                 type="text"
-                name="phone"
-                value={formData.phone}
+                name="phone_number"
+                value={formData.phone_number}
                 onChange={handleChange}
                 placeholder="Enter phone number"
                 className="p-3 border rounded-xl focus:ring focus:ring-blue-300 outline-none"
@@ -148,7 +135,9 @@ function Customer() {
 
           {/* TABLE */}
           <div className="overflow-auto">
-            <h2 className="text-xl font-semibold text-blue-700 mb-3">Sales List</h2>
+            <h2 className="text-xl font-semibold text-blue-700 mb-3">
+              Sales List
+            </h2>
 
             {loading ? (
               <p className="text-center text-gray-500 py-4">Loading...</p>
@@ -161,7 +150,6 @@ function Customer() {
                     <th className="p-3 text-center">Action</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {customers.length === 0 ? (
                     <tr>
@@ -172,16 +160,15 @@ function Customer() {
                   ) : (
                     customers.map((c) => (
                       <tr key={c.id} className="border-t hover:bg-gray-50">
-                        <td className="p-3">{c.nama}</td>
-                        <td className="p-3">{c.phone}</td>
-
+                        <td className="p-3">{c.name}</td>
+                        <td className="p-3">{c.phone_number}</td>
                         <td className="p-3 flex justify-center gap-3">
                           <button
                             className="text-blue-600 hover:underline"
                             onClick={() => {
                               setFormData({
-                                nama: c.nama,
-                                phone: c.phone,
+                                name: c.name,
+                                phone_number: c.phone_number,
                               });
                               setEditId(c.id);
                             }}
@@ -203,7 +190,6 @@ function Customer() {
               </table>
             )}
           </div>
-
         </div>
       </div>
     </div>

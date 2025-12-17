@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { getProducts, createProduct, updateProduct, deleteProduct } from "../../../_services/product";
+import {
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "../../../_services/product";
+import { productImageStorage } from "../../../_api";
 
 function Product() {
   const [products, setProducts] = useState([]);
@@ -8,229 +14,228 @@ function Product() {
     stock: "",
     price: "",
     description: "",
+    photo: null,
   });
-
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // ==========================
-  // FETCH PRODUCTS
+  // AMBIL DATA PRODUK
   // ==========================
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("accessToken");
-
-      if (!token) {
-        console.log("🔒 User belum login — skip fetch products");
-        return;
-      }
-
       try {
         setLoading(true);
-        const data = await getProducts();
+        const data = await getProduct();
         setProducts(data);
       } catch (err) {
-        console.error("❌ Failed to fetch products:", err);
+        console.error("Gagal mengambil data produk:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
   // ==========================
-  // FORM CHANGE
+  // HANDLE INPUT
   // ==========================
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, files } = e.target;
+    if (name === "photo") {
+      setFormData({ ...formData, photo: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   // ==========================
-  // CREATE / UPDATE SUBMIT
+  // SIMPAN / UPDATE PRODUK
   // ==========================
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    if (editId) {
-      // UPDATE
-      await updateProduct(editId, formData);
+    try {
+      setLoading(true);
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("stock", formData.stock);
+      data.append("price", formData.price);
+      data.append("description", formData.description);
+      if (formData.photo) data.append("photo", formData.photo);
 
-      setProducts(products.map((p) =>
-        p.id === editId ? { ...p, ...formData } : p
-      ));
+      if (editId) {
+        const updated = await updateProduct(editId, data);
+        setProducts(products.map((p) => (p.id === editId ? updated.data : p)));
+        setEditId(null);
+      } else {
+        const newProduct = await createProduct(data);
+        setProducts([...products, newProduct.data]);
+      }
 
-      setEditId(null);
-    } else {
-      // CREATE
-      const newProduct = await createProduct(formData);
-      setProducts([...products, newProduct]);
+      setFormData({
+        name: "",
+        stock: "",
+        price: "",
+        description: "",
+        photo: null,
+      });
+    } catch (error) {
+      console.error("Gagal menyimpan produk:", error);
+    } finally {
+      setLoading(false);
     }
-
-    // CLEAR FORM
-    setFormData({
-      name: "",
-      stock: "",
-      price: "",
-      description: "",
-    });
-
-  } catch (error) {
-    console.error("❌ Failed to save product:", error);
-  }
-};
-
+  };
 
   // ==========================
-  // DELETE
+  // HAPUS PRODUK
   // ==========================
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this product?")) return;
+    if (!window.confirm("Apakah yakin ingin menghapus produk ini?")) return;
 
     try {
       await deleteProduct(id);
       setProducts(products.filter((p) => p.id !== id));
     } catch (error) {
-      console.error("❌ Failed to delete product:", error);
+      console.error("Gagal menghapus produk:", error);
     }
   };
 
+  // ==========================
+  // PILIH EDIT
+  // ==========================
+  const handleEdit = (p) => {
+    setFormData({
+      name: p.name,
+      stock: p.stock,
+      price: p.price,
+      description: p.description,
+      photo: null,
+    });
+    setEditId(p.id);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-white flex justify-center py-10 px-4">
-      <div className="w-full max-w-6xl bg-white p-8 rounded-2xl shadow-lg border border-blue-100">
+    <div className="min-h-screen bg-slate-100 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
 
-        <h1 className="text-3xl font-bold text-blue-900 mb-8 text-center">
-          Product Management
-        </h1>
+        {/* HEADER */}
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-800">
+            Manajemen Produk
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Kelola data produk, stok, harga, dan foto
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          {/* ========================== */}
-          {/* FORM SECTION */}
-          {/* ========================== */}
-          <form onSubmit={handleSubmit} className="space-y-5 bg-blue-50 p-5 rounded-xl shadow">
-            <h2 className="text-xl font-semibold text-blue-700 mb-3">
-              {editId ? "Edit Product" : "Add Product"}
+          {/* FORM */}
+          <div className="bg-white rounded-xl border p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-700 mb-4">
+              {editId ? "Edit Produk" : "Tambah Produk"}
             </h2>
 
-            <div className="flex flex-col">
-              <label className="text-gray-700 font-medium">Product Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                placeholder="Enter product name"
-                className="p-3 border rounded-xl focus:ring focus:ring-blue-300 outline-none"
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input label="Nama Produk" name="name" value={formData.name} onChange={handleChange} />
+              <Input label="Stok" name="stock" type="number" value={formData.stock} onChange={handleChange} />
+              <Input label="Harga" name="price" type="number" value={formData.price} onChange={handleChange} />
 
-            <div className="flex flex-col">
-              <label className="text-gray-700 font-medium">Stock</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                placeholder="Enter stock"
-                className="p-3 border rounded-xl focus:ring focus:ring-blue-300 outline-none"
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <div>
+                <label className="text-sm text-slate-600">Deskripsi</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 outline-none"
+                  rows="3"
+                />
+              </div>
 
-            <div className="flex flex-col">
-              <label className="text-gray-700 font-medium">Price</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                placeholder="Enter price"
-                className="p-3 border rounded-xl focus:ring focus:ring-blue-300 outline-none"
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <div>
+                <label className="text-sm text-slate-600">Foto Produk</label>
+                <input
+                  type="file"
+                  name="photo"
+                  onChange={handleChange}
+                  accept="image/*"
+                  className="w-full mt-1 p-2 border rounded-lg"
+                />
+              </div>
 
-            <div className="flex flex-col">
-              <label className="text-gray-700 font-medium">Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                placeholder="Enter description"
-                className="p-3 border rounded-xl min-h-[80px] focus:ring focus:ring-blue-300 outline-none"
-                onChange={handleChange}
-                required
-              />
-            </div>
+              <button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
+              >
+                {editId ? "Perbarui Produk" : "Simpan Produk"}
+              </button>
+            </form>
+          </div>
 
-            <button className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-3 rounded-xl text-lg font-semibold shadow hover:shadow-xl transition-all">
-              {editId ? "Update Product" : "Save Product"}
-            </button>
-          </form>
-
-          {/* ========================== */}
-          {/* TABLE SECTION */}
-          {/* ========================== */}
-          <div className="overflow-auto">
-            <h2 className="text-xl font-semibold text-blue-700 mb-3">Product List</h2>
+          {/* TABLE */}
+          <div className="bg-white rounded-xl border p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-700 mb-4">
+              Daftar Produk
+            </h2>
 
             {loading ? (
-              <p className="text-gray-500 text-center py-4">Loading...</p>
+              <p className="text-center text-slate-500">Memuat data...</p>
             ) : (
-              <table className="w-full text-left border border-gray-200 rounded-xl overflow-hidden">
-                <thead className="bg-green-100 text-gray-700 font-medium">
-                  <tr>
-                    <th className="p-3">Name</th>
-                    <th className="p-3">Stock</th>
-                    <th className="p-3">Price</th>
-                    <th className="p-3 text-center">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {products.length === 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b">
                     <tr>
-                      <td colSpan="4" className="text-center p-3 text-gray-500">
-                        No products yet
-                      </td>
+                      <th className="p-3 text-left">Foto</th>
+                      <th className="p-3 text-left">Nama</th>
+                      <th className="p-3 text-left">Stok</th>
+                      <th className="p-3 text-left">Harga</th>
+                      <th className="p-3 text-center">Aksi</th>
                     </tr>
-                  ) : (
-                    products.map((p) => (
-                      <tr key={p.id} className="border-t hover:bg-gray-50">
-                        <td className="p-3">{p.name}</td>
-                        <td className="p-3">{p.stock}</td>
-                        <td className="p-3">Rp {p.price}</td>
-
-                        <td className="p-3 flex justify-center gap-2">
-                          <button
-                            className="text-blue-600 font-medium hover:underline"
-                            onClick={() => {
-                              setFormData({
-                                name: p.name,
-                                stock: p.stock,
-                                price: p.price,
-                                description: p.description,
-                              });
-                              setEditId(p.id);
-                            }}
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            className="text-red-600 font-medium hover:underline"
-                            onClick={() => handleDelete(p.id)}
-                          >
-                            Delete
-                          </button>
+                  </thead>
+                  <tbody>
+                    {products.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" className="p-4 text-center text-slate-400">
+                          Belum ada produk
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      products.map((p) => (
+                        <tr key={p.id} className="border-b hover:bg-slate-50">
+                          <td className="p-3">
+                            {p.photo && (
+                              <img
+                                src={`${productImageStorage}/${p.photo}`}
+                                alt={p.name}
+                                className="w-14 h-14 object-cover rounded"
+                              />
+                            )}
+                          </td>
+                          <td className="p-3">{p.name}</td>
+                          <td className="p-3">{p.stock}</td>
+                          <td className="p-3">
+                            Rp {Number(p.price).toLocaleString("id-ID")}
+                          </td>
+                          <td className="p-3 text-center space-x-2">
+                            <button
+                              onClick={() => handleEdit(p)}
+                              className="text-blue-600 hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="text-red-600 hover:underline"
+                            >
+                              Hapus
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
@@ -240,4 +245,19 @@ function Product() {
   );
 }
 
+/* =====================
+   KOMPONEN INPUT
+===================== */
+const Input = ({ label, ...props }) => (
+  <div>
+    <label className="text-sm text-slate-600">{label}</label>
+    <input
+      {...props}
+      className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 outline-none"
+      required
+    />
+  </div>
+);
+
 export default Product;
+

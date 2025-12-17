@@ -1,62 +1,59 @@
-import api from "../_api";
+import { API } from "../_api"
 
-// 📦 Get all products
-export const getProducts = async () => {
-  const token = localStorage.getItem("accessToken");
-
-  // ⛔ Kalau belum login, jangan panggil API
-  if (!token) {
-    console.warn("⚠️ User not logged in — product API skipped.");
-    return []; 
-  }
-
-  try {
-    const { data } = await api.get("/products", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
+// GET all products (tidak pakai Authorization)
+export const getProduct = async () => {
+    const { data } = await API.get("/products");
     return data.data;
-  } catch (error) {
-    console.error("❌ Error fetching products:", error);
-    throw error;
-  }
 };
 
-
-
+// CREATE new product
 export const createProduct = async (formData) => {
-  const { data } = await api.post("/products", formData, {
-    headers: {
-      "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-      "Content-Type": "application/json"
+    try {
+        const response = await API.post("/products", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error creating product:", error.response?.data || error.message);
+        throw error;
     }
-  });
-
-  return data.data;
 };
 
+// SHOW a single product by ID (tidak pakai Authorization)
+export const showProduct = async (id) => {
+    const { data } = await API.get(`/products/${id}`);
+    return data.data;
+};
+
+// UPDATE product by ID
 export const updateProduct = async (id, formData) => {
-  const { data } = await api.post(`/products/${id}`, formData, {
-    headers: {
-      "Authorization": `Bearer ${localStorage.getItem("accessToken")}`,
-      "Content-Type": "application/json"
+    try {
+        const response = await API.post(`/products/${id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating product:", error.response?.data || error.message);
+        throw error;
     }
-  });
-
-  return data.data;
 };
 
+// DELETE product by ID
 export const deleteProduct = async (id) => {
-  const { data } = await api.delete(`/products/${id}`, {
-    headers: {
-      "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+    try {
+        await API.delete(`/products/${id}`, {
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            }
+        });
+    } catch (error) {
+        console.error("Error deleting product:", error.response?.data || error.message);
+        throw error;
     }
-  });
-
-  return data.data;
 };
-
-
-

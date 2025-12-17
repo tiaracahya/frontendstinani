@@ -16,7 +16,7 @@ import Register from "./pages/auth/register";
 
 // Admin Pages
 import ProductPage from "./pages/admin/product/index";
-import SalesPage from "./pages/admin/sales/index";
+import SalesPage from "./pages/admin/customer/index";
 import ExpensePage from "./pages/admin/expense/index";
 import TransactionPage from "./pages/admin/transactions/index";
 import UserPage from "./pages/admin/users/index";

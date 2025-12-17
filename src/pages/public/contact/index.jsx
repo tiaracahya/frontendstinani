@@ -1,73 +1,100 @@
 import React from "react";
-import { Mail, Github, MessageCircle } from "lucide-react";
+import { Instagram, Globe, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 
-function Contact() {
+export default function Contact() {
   const contacts = [
     {
-      title: "Email",
-      icon: <Mail className="w-6 h-6 text-indigo-600" />,
-      value: "nabillabillaa11@gmail.com",
-      action: "Send",
-      color: "bg-indigo-600 hover:bg-indigo-700",
-      link: "mailto:nabillabillaa11@gmail.com",
+      title: "Instagram BEM POLSRI",
+      type: "Instagram",
+      value: "@bempolsri_",
+      link: "https://www.instagram.com/bempolsri_/",
+      icon: Instagram,
+      gradient: "from-pink-500 via-purple-500 to-indigo-500",
     },
     {
-      title: "WhatsApp",
-      icon: <MessageCircle className="w-6 h-6 text-green-600" />,
-      value: "+62 812-8118-1417",
-      action: "Chat",
-      color: "bg-green-600 hover:bg-green-700",
-      link: "https://wa.me/6281281181417",
+      title: "Website BEM POLSRI",
+      type: "Website",
+      value: "bem.polsri.ac.id",
+      link: "https://bem.polsri.ac.id/",
+      icon: Globe,
+      gradient: "from-indigo-600 to-blue-500",
     },
     {
-      title: "GitHub",
-      icon: <Github className="w-6 h-6 text-gray-900" />,
-      value: "@nbilaa_11",
-      action: "Visit",
-      color: "bg-gray-900 hover:bg-gray-800",
-      link: "https://github.com/tiaracahya",
+      title: "Instagram BEMBERDAMPAK POLSRI",
+      type: "Instagram",
+      value: "@bemberdampa.polsri",
+      link: "https://www.instagram.com/bemberdampak.polsri/",
+      icon: Instagram,
+      gradient: "from-orange-500 via-rose-500 to-pink-500",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white flex flex-col items-center py-20 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold text-gray-800 mb-3">
-          Contact Me
-        </h1>
-        <p className="text-gray-500 text-lg">
-          Reach out through any of the platforms below 🌸
-        </p>
-      </div>
+    <section className="relative min-h-screen flex items-center justify-center px-6 py-24 bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+      {/* background blur */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-200/40 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-200/40 rounded-full blur-3xl" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-        {contacts.map((item, index) => (
-          <div
-            key={index}
-            className="flex justify-between items-center bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-2xl p-5 border border-gray-100"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-indigo-50 rounded-xl">{item.icon}</div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {item.title}
-                </h3>
-                <p className="text-gray-500">{item.value}</p>
-              </div>
-            </div>
-            <a
-              href={item.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`text-white font-medium px-5 py-2 rounded-xl transition-all duration-200 ${item.color}`}
-            >
-              {item.action}
-            </a>
-          </div>
-        ))}
+      <div className="relative w-full max-w-6xl">
+        {/* header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+            Contact Us
+          </h1>
+          <p className="text-gray-500 max-w-2xl mx-auto text-lg">
+            Hubungi dan ikuti BEM POLSRI serta BEMBERDAMPAK POLSRI melalui platform resmi kami.
+          </p>
+        </motion.div>
+
+        {/* contact cards */}
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {contacts.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <motion.a
+                key={index}
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.15 }}
+                whileHover={{ y: -6 }}
+                className="group relative rounded-3xl bg-white border border-gray-100 shadow-md hover:shadow-xl transition-all"
+              >
+                {/* top accent */}
+                <div className={`h-1 rounded-t-3xl bg-gradient-to-r ${item.gradient}`} />
+
+                <div className="p-8 flex flex-col items-center text-center h-full">
+                  <div className="p-4 rounded-2xl bg-gray-100 mb-5">
+                    <Icon className="w-7 h-7 text-gray-800" />
+                  </div>
+
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">{item.type}</p>
+
+                  <p className="text-gray-600 font-medium mb-8">{item.value}</p>
+
+                  <span
+                    className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-white bg-gradient-to-r ${item.gradient} group-hover:opacity-90 transition`}
+                  >
+                    Visit {item.type}
+                    <ArrowUpRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </motion.a>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
-
-export default Contact;

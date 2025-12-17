@@ -1,203 +1,286 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { getTransactions, createTransaction, deleteTransaction, updateTransaction } from "../../../_services/transaction";
+import { getProduct } from "../../../_services/product";
+import { getCustomer } from "../../../_services/customer";
 
 function Transaction() {
-  const navigate = useNavigate();
-  const API_URL = "http://127.0.0.1:8000/api"; // GANTI sesuai backend
-
-  const [salesId] = useState("S001"); 
+  const [transactions, setTransactions] = useState([]);
   const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [message, setMessage] = useState("");
+  const [editId, setEditId] = useState(null);
 
   const [form, setForm] = useState({
+    customer_id: "",
     product_id: "",
-    qty: "",
+    qty: 0,
     date: "",
-    total: 0,
     price: 0,
+    total: 0,
   });
 
+  // ==========================
+  // FETCH DATA
+  // ==========================
   useEffect(() => {
-    fetch(`${API_URL}/products`)
-      .then(res => res.json())
-      .then(data => setProducts(data))
-      .catch(() => setMessage("⚠️ Gagal memuat produk"));
+    const fetchData = async () => {
+      try {
+        setProducts(await getProduct());
+        setCustomers(await getCustomer());
+        setTransactions(await getTransactions());
+      } catch (err) {
+        console.error(err);
+        setMessage("⚠️ Gagal memuat data");
+      }
+    };
+    fetchData();
   }, []);
 
+  const getCustomerName = (id) =>
+    customers.find((c) => c.id === Number(id))?.name || "-";
+
+  const getProductName = (id) =>
+    products.find((p) => p.id === Number(id))?.name || "-";
+
+  const getProductPrice = (id) =>
+    products.find((p) => p.id === Number(id))?.price || 0;
+
+  // ==========================
+  // HANDLE INPUT
+  // ==========================
   const handleChange = (e) => {
     const { name, value } = e.target;
     let updated = { ...form, [name]: value };
 
-    if (name === "product_id") {
-      const selected = products.find(p => p.id === parseInt(value));
-      updated.price = selected?.price ?? 0;
-    }
+    if (name === "product_id") updated.price = getProductPrice(value);
+    if (name === "qty") updated.qty = Number(value) || 0;
 
-    updated.total = updated.price * (updated.qty || 0);
+    updated.total = updated.price * updated.qty;
     setForm(updated);
   };
 
+  // ==========================
+  // SUBMIT
+  // ==========================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      sales_id: salesId,
-      ...form,
-    };
 
     try {
-      const res = await fetch(`${API_URL}/transactions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const payload = {
+        customer_id: form.customer_id,
+        product_id: form.product_id,
+        quantity: form.qty,
+        date: form.date,
+      };
 
-      if (res.ok) {
-        setMessage("🎉 Transaksi berhasil disimpan!");
-        setForm({ product_id: "", qty: "", date: "", total: 0, price: 0 });
+      if (editId) {
+        await updateTransaction(editId, payload);
+        setTransactions(
+          transactions.map((t) =>
+            t.id === editId ? { ...t, ...payload, total: form.total } : t
+          )
+        );
+        setEditId(null);
+        setMessage("✅ Transaksi berhasil diperbarui");
       } else {
-        setMessage("❌ Gagal menyimpan transaksi");
+        const res = await createTransaction(payload);
+        setTransactions([...transactions, res.data]);
+        setMessage("✅ Transaksi berhasil ditambahkan");
       }
+
+      setForm({
+        customer_id: "",
+        product_id: "",
+        qty: 0,
+        date: "",
+        price: 0,
+        total: 0,
+      });
     } catch {
-      setMessage("❌ Kesalahan koneksi server");
+      setMessage("❌ Gagal menyimpan transaksi");
+    }
+  };
+
+  // ==========================
+  // DELETE
+  // ==========================
+  const handleDelete = async (id) => {
+    if (!window.confirm("Apakah yakin ingin menghapus transaksi ini?")) return;
+
+    try {
+      await deleteTransaction(id);
+      setTransactions(transactions.filter((t) => t.id !== id));
+      setMessage("✅ Transaksi berhasil dihapus");
+    } catch {
+      setMessage("❌ Gagal menghapus transaksi");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-100 via-white to-blue-100 flex justify-center items-center p-6">
-      <div className="w-full max-w-3xl bg-white/95 backdrop-blur-md shadow-2xl rounded-3xl p-10 border border-blue-200">
+    <div className="min-h-screen bg-slate-100 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
 
-        {/* Header Informasi */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-green-700 text-transparent bg-clip-text drop-shadow-md">
-            Input Transaksi Penjualan
+        {/* HEADER */}
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-800">
+            Manajemen Transaksi
           </h1>
-          <p className="text-gray-600 mt-2">
-            Masukkan data transaksi untuk pencatatan penjualan dan laporan.
+          <p className="text-slate-500">
+            Catat dan kelola transaksi penjualan
           </p>
         </div>
 
         {message && (
-          <div className="mb-4 p-3 text-center rounded-lg font-medium bg-blue-50 border border-blue-200 text-blue-700">
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 p-3 rounded-lg">
             {message}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* Sales ID */}
-          <div>
-            <label className="font-medium text-gray-700 mb-1">Sales ID</label>
-            <input
-              disabled
-              value={salesId}
-              className="w-full p-3 bg-gray-100 border rounded-xl cursor-not-allowed"
-            />
-          </div>
+        {/* FORM */}
+        <div className="bg-white rounded-xl border p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-700 mb-4">
+            {editId ? "Edit Transaksi" : "Tambah Transaksi"}
+          </h2>
 
-          {/* Produk */}
-          <div>
-            <label className="font-medium text-gray-700 mb-1">Produk</label>
-            <select
-              required
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Customer"
+              name="customer_id"
+              value={form.customer_id}
+              onChange={handleChange}
+              options={customers.map((c) => ({ value: c.id, label: c.name }))}
+            />
+
+            <Select
+              label="Produk"
               name="product_id"
               value={form.product_id}
               onChange={handleChange}
-              className="w-full p-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">Pilih Produk</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} — Rp {p.price.toLocaleString()}
-                </option>
-              ))}
-            </select>
-          </div>
+              options={products.map((p) => ({
+                value: p.id,
+                label: `${p.name} — Rp ${Number(p.price).toLocaleString("id-ID")}`,
+              }))}
+            />
 
-          {/* Qty & Price */}
-          <div className="grid grid-cols-2 gap-5">
-            <div>
-              <label className="font-medium text-gray-700 mb-1">Jumlah</label>
-              <input
-                type="number"
-                name="qty"
-                required
-                value={form.qty}
-                onChange={handleChange}
-                className="w-full p-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-400"
-              />
+            <Input label="Jumlah" name="qty" type="number" value={form.qty} onChange={handleChange} />
+            <Input label="Tanggal" name="date" type="date" value={form.date} onChange={handleChange} />
+
+            <div className="md:col-span-2 bg-slate-50 p-4 rounded-lg">
+              <p className="text-sm text-slate-600">Total Pembayaran</p>
+              <p className="text-2xl font-semibold text-blue-700">
+                Rp {form.total.toLocaleString("id-ID")}
+              </p>
             </div>
 
-            <div>
-              <label className="font-medium text-gray-700 mb-1">Harga Satuan</label>
-              <input
-                disabled
-                value={`Rp ${form.price.toLocaleString()}`}
-                className="w-full p-3 bg-gray-100 border rounded-xl cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-          {/* Tanggal */}
-          <div>
-            <label className="font-medium text-gray-700 mb-1">Tanggal Transaksi</label>
-            <input
-              required
-              type="date"
-              name="date"
-              value={form.date}
-              onChange={handleChange}
-              className="w-full p-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-
-          {/* Total */}
-          <div>
-            <label className="font-medium text-gray-700 mb-1">Total Harga</label>
-            <input
-              disabled
-              value={`Rp ${form.total.toLocaleString()}`}
-              className="w-full p-3 bg-gray-100 border rounded-xl font-bold"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:opacity-90 transition-all"
-            >
-              Simpan Transaksi
+            <button className="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
+              {editId ? "Perbarui Transaksi" : "Simpan Transaksi"}
             </button>
+          </form>
+        </div>
 
-            <button
-              type="button"
-              onClick={() => navigate("/sales")}
-              className="px-5 bg-gray-200 hover:bg-gray-300 rounded-xl font-medium"
-            >
-              Sales
-            </button>
+        {/* TABLE */}
+        <div className="bg-white rounded-xl border p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-700 mb-4">
+            Riwayat Transaksi
+          </h2>
 
-            <button
-              type="button"
-              onClick={() => navigate("/product")}
-              className="px-5 bg-gray-200 hover:bg-gray-300 rounded-xl font-medium"
-            >
-              Produk
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/reports")}
-              className="px-5 bg-gray-200 hover:bg-gray-300 rounded-xl font-medium"
-            >
-              Reports
-            </button>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  <th className="p-3 text-left">Customer</th>
+                  <th className="p-3 text-left">Produk</th>
+                  <th className="p-3 text-left">Jumlah</th>
+                  <th className="p-3 text-left">Total</th>
+                  <th className="p-3 text-left">Tanggal</th>
+                  <th className="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="p-4 text-center text-slate-400">
+                      Belum ada transaksi
+                    </td>
+                  </tr>
+                ) : (
+                  transactions.map((t) => (
+                    <tr key={t.id} className="border-b hover:bg-slate-50">
+                      <td className="p-3">{getCustomerName(t.customer_id)}</td>
+                      <td className="p-3">{getProductName(t.product_id)}</td>
+                      <td className="p-3">{t.quantity}</td>
+                      <td className="p-3">
+                        Rp {Number(t.total).toLocaleString("id-ID")}
+                      </td>
+                      <td className="p-3">{t.date}</td>
+                      <td className="p-3 text-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setForm({
+                              customer_id: t.customer_id,
+                              product_id: t.product_id,
+                              qty: t.quantity,
+                              date: t.date,
+                              price: getProductPrice(t.product_id),
+                              total: t.total,
+                            });
+                            setEditId(t.id);
+                          }}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t.id)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
+        </div>
 
-        </form>
       </div>
     </div>
   );
 }
+
+/* =====================
+   KOMPONEN BANTUAN
+===================== */
+
+const Input = ({ label, ...props }) => (
+  <div>
+    <label className="text-sm text-slate-600">{label}</label>
+    <input
+      {...props}
+      className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 outline-none"
+      required
+    />
+  </div>
+);
+
+const Select = ({ label, options, ...props }) => (
+  <div>
+    <label className="text-sm text-slate-600">{label}</label>
+    <select
+      {...props}
+      className="w-full mt-1 p-3 border rounded-lg focus:ring focus:ring-blue-200 outline-none"
+      required
+    >
+      <option value="">Pilih {label}</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
 
 export default Transaction;

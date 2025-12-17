@@ -1,26 +1,69 @@
-import api from "./api";
+import { API } from "../_api"
 
+// GET all expenses
 export const getExpenses = async () => {
-  const response = await api.get("/expenses");
-  return response.data;
+    const { data } = await API.get("/expenses", {
+        headers: {
+            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+    });
+
+    return data.data;
 };
 
-export const getExpense = async (id) => {
-  const response = await api.get(`/expenses/${id}`);
-  return response.data;
+// CREATE new expense
+export const createExpenses = async (formData) => {
+    try {
+        const response = await API.post("/expenses", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error creating expense:", error.response?.data || error.message);
+        throw error;
+    }
 };
 
-export const createExpense = async (data) => {
-  const response = await api.post("/expenses", data);
-  return response.data;
+// SHOW a single expense by ID
+export const showExpenses = async (id) => {
+    const { data } = await API.get(`/expenses/${id}`, {
+        headers: {
+            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+        }
+    });
+
+    return data.data;
 };
 
-export const updateExpense = async (id, data) => {
-  const response = await api.put(`/expenses/${id}`, data);
-  return response.data;
+// UPDATE expense by ID
+export const updateExpenses = async (id, formData) => {
+    try {
+        const response = await API.post(`/expenses/${id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating expense:", error.response?.data || error.message);
+        throw error;
+    }
 };
 
-export const deleteExpense = async (id) => {
-  const response = await api.delete(`/expenses/${id}`);
-  return response.data;
+// DELETE expense by ID
+export const deleteExpenses = async (id) => {
+    try {
+        await API.delete(`/expenses/${id}`, {
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
+            }
+        });
+    } catch (error) {
+        console.error("Error deleting expense:", error.response?.data || error.message);
+        throw error;
+    }
 };

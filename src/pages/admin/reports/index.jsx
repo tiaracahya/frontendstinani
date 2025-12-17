@@ -1,150 +1,193 @@
 import React, { useEffect, useState } from "react";
-import {
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { getTransactions } from "../../../_services/transaction";
+import { getProduct } from "../../../_services/product";
+import { getCustomer } from "../../../_services/customer";
+import { getExpenses } from "../../../_services/expense";
 
-const ReportsPage = () => {
-  const [filter, setFilter] = useState("daily");
-  const [data, setData] = useState([]);
+function ReportPage() {
+  const [transactions, setTransactions] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // contoh data dummy (nanti bisa diganti dari API)
-  const dummyData = {
-    daily: [
-      { name: "Sen", sales: 300000, expense: 150000 },
-      { name: "Sel", sales: 400000, expense: 180000 },
-      { name: "Rab", sales: 350000, expense: 160000 },
-      { name: "Kam", sales: 500000, expense: 220000 },
-      { name: "Jum", sales: 450000, expense: 190000 },
-      { name: "Sab", sales: 550000, expense: 250000 },
-      { name: "Min", sales: 600000, expense: 270000 },
-    ],
-    weekly: [
-      { name: "Minggu 1", sales: 3200000, expense: 1500000 },
-      { name: "Minggu 2", sales: 4500000, expense: 2000000 },
-      { name: "Minggu 3", sales: 5000000, expense: 2400000 },
-      { name: "Minggu 4", sales: 4200000, expense: 2100000 },
-    ],
-    monthly: [
-      { name: "Jan", sales: 15000000, expense: 7000000 },
-      { name: "Feb", sales: 17000000, expense: 8000000 },
-      { name: "Mar", sales: 16000000, expense: 7800000 },
-      { name: "Apr", sales: 18000000, expense: 8200000 },
-    ],
-    yearly: [
-      { name: "2021", sales: 120000000, expense: 70000000 },
-      { name: "2022", sales: 140000000, expense: 80000000 },
-      { name: "2023", sales: 150000000, expense: 90000000 },
-      { name: "2024", sales: 170000000, expense: 95000000 },
-    ],
-  };
-
+  // =============================
+  // FETCH SEMUA DATA
+  // =============================
   useEffect(() => {
-    setLoading(true);
-    // simulasi ambil data dari API
-    setTimeout(() => {
-      setData(dummyData[filter]);
-      setLoading(false);
-    }, 500);
-  }, [filter]);
+    const fetchData = async () => {
+      try {
+        const t = await getTransactions();
+        const p = await getProduct();
+        const c = await getCustomer();
+        const e = await getExpenses();
+
+        setTransactions(t || []);
+        setProducts(p || []);
+        setCustomers(c || []);
+        setExpenses(e || []);
+      } catch (err) {
+        console.error("Gagal memuat laporan:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // =============================
+  // PERHITUNGAN LAPORAN
+  // =============================
+  const totalTransaksi = transactions.length;
+
+  const totalPemasukan = transactions.reduce(
+    (sum, t) => sum + Number(t.total || 0),
+    0
+  );
+
+  const totalPengeluaran = expenses.reduce(
+    (sum, e) => sum + Number(e.total || 0),
+    0
+  );
+
+  const totalProdukTerjual = transactions.reduce(
+    (sum, t) => sum + Number(t.quantity || 0),
+    0
+  );
+
+  const getProductName = (id) =>
+    products.find((p) => p.id === Number(id))?.name || "-";
+
+  const getCustomerName = (id) =>
+    customers.find((c) => c.id === Number(id))?.name || "-";
+
+  if (loading) {
+    return <p className="text-center mt-10">Memuat laporan...</p>;
+  }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-4">Laporan Penjualan & Pengeluaran</h1>
+    <div className="min-h-screen bg-slate-100 p-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-8 space-y-10">
 
-      {/* Filter */}
-      <div className="flex items-center space-x-3">
-        <label className="text-gray-600 font-semibold">Filter Laporan:</label>
-        <select
-          className="p-2 border rounded-md bg-white"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="daily">Harian</option>
-          <option value="weekly">Mingguan</option>
-          <option value="monthly">Bulanan</option>
-          <option value="yearly">Tahunan</option>
-        </select>
-      </div>
-
-      {/* Chart */}
-      <div className="bg-white shadow-md p-6 rounded-lg">
-        {loading ? (
-          <p className="text-center text-gray-500">Memuat data...</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => `Rp ${value.toLocaleString()}`} />
-              <Line
-                type="monotone"
-                dataKey="sales"
-                stroke="#16a34a"
-                strokeWidth={3}
-                name="Penjualan"
-              />
-              <Line
-                type="monotone"
-                dataKey="expense"
-                stroke="#dc2626"
-                strokeWidth={3}
-                name="Pengeluaran"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Table Summary */}
-      {!loading && (
-        <div className="bg-white shadow-md p-6 rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">Rangkuman {filter}</h2>
-          <table className="min-w-full border">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700 text-left">
-                <th className="p-2 border">Periode</th>
-                <th className="p-2 border">Total Penjualan</th>
-                <th className="p-2 border">Total Pengeluaran</th>
-                <th className="p-2 border">Keuntungan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((item, index) => {
-                const profit = item.sales - item.expense;
-                return (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="p-2 border">{item.name}</td>
-                    <td className="p-2 border">Rp {item.sales.toLocaleString()}</td>
-                    <td className="p-2 border text-red-600">
-                      Rp {item.expense.toLocaleString()}
-                    </td>
-                    <td
-                      className={`p-2 border font-semibold ${
-                        profit >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      Rp {profit.toLocaleString()}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        {/* HEADER */}
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Laporan Penjualan</h1>
+          <p className="text-slate-500">
+            Ringkasan pemasukan, pengeluaran, dan aktivitas penjualan
+          </p>
         </div>
-      )}
+
+        {/* SUMMARY CARD */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Summary title="Total Transaksi" value={totalTransaksi} />
+          <Summary
+            title="Total Pemasukan"
+            value={`Rp ${totalPemasukan.toLocaleString("id-ID")}`}
+          />
+          <Summary
+            title="Total Pengeluaran"
+            value={`Rp ${totalPengeluaran.toLocaleString("id-ID")}`}
+          />
+          <Summary title="Produk Terjual" value={`${totalProdukTerjual} item`} />
+          <Summary title="Total Produk" value={products.length} />
+          <Summary title="Total Customer" value={customers.length} />
+        </div>
+
+        {/* TRANSAKSI */}
+        <Section title="Daftar Transaksi">
+          <Table
+            headers={["Customer", "Produk", "Jumlah", "Total", "Tanggal"]}
+            data={transactions.map((t) => [
+              getCustomerName(t.customer_id),
+              getProductName(t.product_id),
+              t.quantity,
+              `Rp ${Number(t.total).toLocaleString("id-ID")}`,
+              t.date,
+            ])}
+          />
+        </Section>
+
+        {/* PRODUK TERJUAL */}
+        <Section title="Produk Terjual">
+          <Table
+            headers={["Nama Produk", "Stok", "Harga"]}
+            data={products.map((p) => [
+              p.name,
+              p.stock,
+              `Rp ${Number(p.price).toLocaleString("id-ID")}`,
+            ])}
+          />
+        </Section>
+
+        {/* EXPENSE */}
+        <Section title="Pengeluaran">
+          <Table
+            headers={["Nama", "Tanggal", "Qty", "Total"]}
+            data={expenses.map((e) => [
+              e.name,
+              e.date,
+              e.quantity,
+              `Rp ${Number(e.total).toLocaleString("id-ID")}`,
+            ])}
+          />
+        </Section>
+      </div>
     </div>
   );
-};
+}
 
-export default ReportsPage;
+/* =============================
+   KOMPONEN BANTUAN
+============================= */
 
+const Summary = ({ title, value }) => (
+  <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
+    <h3 className="text-sm text-blue-700 font-medium">{title}</h3>
+    <p className="text-2xl font-bold text-blue-800 mt-2">{value}</p>
+  </div>
+);
 
+const Section = ({ title, children }) => (
+  <div>
+    <h2 className="text-xl font-semibold text-slate-700 mb-4">{title}</h2>
+    {children}
+  </div>
+);
 
+const Table = ({ headers, data }) => (
+  <div className="overflow-x-auto border rounded-xl">
+    <table className="w-full text-sm">
+      <thead className="bg-slate-100">
+        <tr>
+          {headers.map((h, i) => (
+            <th key={i} className="p-3 text-left">
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.length === 0 ? (
+          <tr>
+            <td colSpan={headers.length} className="p-4 text-center text-gray-500">
+              Tidak ada data
+            </td>
+          </tr>
+        ) : (
+          data.map((row, i) => (
+            <tr key={i} className="border-t hover:bg-slate-50">
+              {row.map((cell, j) => (
+                <td key={j} className="p-3">
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </div>
+);
+
+export default ReportPage;

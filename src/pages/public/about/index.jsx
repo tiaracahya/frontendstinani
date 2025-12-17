@@ -8,9 +8,11 @@ function About() {
           Tentang Kami
         </h2>
         <p className="text-gray-600 dark:text-gray-300 text-center max-w-3xl mx-auto mb-12">
-          <b>ByBook</b> adalah platform toko buku online yang menyediakan berbagai koleksi
-          buku dari berbagai genre dan penulis terkenal. Kami berkomitmen untuk
-          membe produk pertanian yang kami bu 
+          <b>Aplikasi Manajemen Keuangan Pabrik Gojong Desa Sukarami</b> adalah sistem 
+          yang dirancang untuk membantu proses pencatatan keuangan yang sebelumnya 
+          masih dilakukan secara manual. Aplikasi ini memudahkan pencatatan pemasukan, 
+          pengeluaran, biaya produksi, dan penyusunan laporan keuangan secara cepat, 
+          akurat, dan terstruktur.
         </p>
 
         <div className="grid md:grid-cols-3 gap-8 mt-8">
@@ -19,8 +21,8 @@ function About() {
               Misi Kami
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Menyebarkan ilmu dan inspirasi melalui buku serta mempermudah akses
-              pembaca ke karya-karya berkualitas di seluruh Indonesia.
+              Meningkatkan efisiensi dan akurasi pengelolaan keuangan pabrik gojong 
+              melalui sistem digital yang mudah digunakan dan dapat diakses kapan saja.
             </p>
           </div>
 
@@ -29,8 +31,8 @@ function About() {
               Visi Kami
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Menjadi platform literasi digital terbaik yang menghubungkan penulis
-              dan pembaca dalam satu ekosistem kreatif.
+              Menjadi solusi keuangan berbasis teknologi yang mendukung pengelolaan 
+              produksi gojong secara modern dan transparan di Desa Sukarami.
             </p>
           </div>
 
@@ -39,8 +41,9 @@ function About() {
               Nilai Kami
             </h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Inovasi, Kejujuran, dan Pelayanan yang ramah menjadi dasar dalam setiap
-              langkah yang kami ambil untuk memberikan pengalaman terbaik kepada pelanggan.
+              Akurasi, transparansi, dan kemudahan penggunaan menjadi dasar dalam 
+              pengembangan aplikasi untuk membantu pabrik gojong mengelola keuangan 
+              secara lebih profesional.
             </p>
           </div>
         </div>
