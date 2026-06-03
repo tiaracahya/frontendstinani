@@ -103,7 +103,7 @@ function ExpensePage() {
     <div className="p-6 bg-white rounded-xl shadow-sm">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Expense</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Pengeluaran</h2>
         <button
           onClick={() => {
             resetForm();
